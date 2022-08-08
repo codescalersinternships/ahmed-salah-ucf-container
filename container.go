@@ -40,9 +40,18 @@ func run() {
 		Unshareflags: syscall.CLONE_NEWNS,
 		UidMappings: []syscall.SysProcIDMap{{
 			ContainerID: 0,
-			HostID: 1000,
+			HostID: syscall.Getuid(),
 			Size: 1,
 		}},
+		GidMappings: []syscall.SysProcIDMap{{
+			ContainerID: 0,
+			HostID: syscall.Getgid(),
+			Size: 1,
+		}},
+		Credential: &syscall.Credential{
+			Uid: uint32(syscall.Getuid()),
+			Gid: uint32(syscall.Getuid()),
+		},
 	}
 
 	assert(cmd.Run())
@@ -77,7 +86,6 @@ func cg() {
 	pids := path.Join(cgroups, "pids")
 	os.Mkdir(pids, 0755)
 	assert(os.WriteFile(path.Join(pids, "pids.max"), []byte(numProcessesLimit), 0700))
-	assert(os.WriteFile(path.Join(pids, "notify_on_release"), []byte("1"), 0700))
 	assert(os.WriteFile(path.Join(pids, "cgroup.procs"), []byte(strconv.Itoa(os.Getpid())), 0700))
 }
 
